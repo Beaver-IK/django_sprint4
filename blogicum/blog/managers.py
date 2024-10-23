@@ -24,19 +24,12 @@ class PostManager(models.Manager):
             'is_published': True,
             'pub_date__lte': now(),
             'category__is_published': True}
+        queryset = self.data().filter(Q(**filters))
         if author:
-            return self.data().filter(
-                Q(**filters),
-                Q(author__username=author)
-            )
+            queryset = queryset.filter(author__username=author)
         if category:
-            return self.data().filter(
-                Q(**filters),
-                Q(category__slug=category)
-            )
-        return self.data().filter(
-            Q(**filters)
-        )
+            queryset = queryset.filter(category__slug=category)
+        return queryset
 
     def in_profile(self, author, auth):
         """Фильтрация постов для профиля.
@@ -56,7 +49,7 @@ class PostManager(models.Manager):
             return self.dropout()
 
 
-class CommentMeneger(models.Manager):
+class CommentManager(models.Manager):
     """Менеджер комментариев."""
 
     def for_post(self, post):

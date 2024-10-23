@@ -23,11 +23,7 @@ class PostForm(forms.ModelForm):
 
     class Meta:
         model = Post
-        fields = ('title', 'text', 'pub_date',
-                  'location', 'category', 'image')
-        wigets = {
-            'pub_date': forms.DateTimeField()
-        }
+        exclude = ('author',)
     # Забракованная автотестами фича
     """def clean_pub_date(self):
         if self.cleaned_data['pub_date'] is None:

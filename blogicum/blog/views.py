@@ -1,18 +1,14 @@
-from typing import Any
-
-from blog.models import Category, Comment, Post, User
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
 from django.utils.timezone import now
 from django.views.generic import (CreateView, DeleteView, DetailView, ListView,
                                   UpdateView)
 
+from blog.models import Category, Comment, Post, User
 from .forms import CommentForm, PostForm, UserForm
 from .utils import CommentMixin, OnlyAuthorMixin, PostMixin
-
-PAGINATE_BY = 10
+from .constants import PAGINATE_BY
 
 
 class IndexListView(ListView):
@@ -30,45 +26,32 @@ class CategoryListView(ListView):
     model = Post
     template_name = 'blog/category.html'
     paginate_by = PAGINATE_BY
-    category = None
 
-    def dispatch(self, request, *args, **kwargs):
-        self.category = get_object_or_404(
-            Category, slug=kwargs['category_slug'],
+    def get_queryset(self):
+        category = get_object_or_404(
+            Category, slug=self.kwargs['category_slug'],
             is_published=True)
-        return super().dispatch(request, *args, **kwargs)
-
-    def get_context_data(self, **kwargs) -> dict[str, Any]:
-        context = super().get_context_data(**kwargs)
-        context['page_obj'] = Paginator(
-            Post.published.dropout(
-                category=self.kwargs['category_slug']), self.paginate_by
-        ).get_page(self.request.GET.get('page'))
-        return context
+        return Post.published.dropout(
+            category=category.slug)
 
 
-class ProfileDetailView(DetailView):
-    """CBV профиля пользователя."""
+class ProfileListView(ListView):
+    """CBV страницы профиля."""
 
-    model = User
+    model = Post
     template_name = 'blog/profile.html'
-    context_object_name = 'profile'
-    slug_field = 'username'
-    slug_url_kwarg = 'username'
-    owner = None
+    paginate_by = PAGINATE_BY
 
-    def dispatch(self, request, *args, **kwargs):
-        self.owner = get_object_or_404(User, username=kwargs['username'])
-        return super().dispatch(request, *args, **kwargs)
+    def get_queryset(self):
+        owner = get_object_or_404(User, username=self.kwargs['username'])
+        is_owner = self.request.user == owner
+        return Post.published.in_profile(
+            author=self.kwargs['username'], auth=is_owner)
 
-    def get_context_data(self, **kwargs) -> dict[str, Any]:
+    def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        is_owner = self.request.user == self.owner
-        context['page_obj'] = Paginator(
-            Post.published.in_profile(
-                author=self.kwargs['username'], auth=is_owner),
-            PAGINATE_BY).get_page(
-                self.request.GET.get('page'))
+        context['profile'] = get_object_or_404(
+            User, username=self.kwargs['username'])
         return context
 
 
@@ -105,25 +88,23 @@ class PostDetailDetailView(LoginRequiredMixin, DetailView):
     """CBV полного просмотра поста."""
 
     model = Post
-    template_name = "blog/detail.html"
+    template_name = 'blog/detail.html'
     context_object_name = 'post'
     slug_field = 'id'
     slug_url_kwarg = 'post_id'
-    owner = None
-
-    def dispatch(self, request, *args, **kwargs):
-        post = get_object_or_404(Post, id=kwargs['post_id'])
-        self.owner = post.author == self.request.user
-        return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
-        return Post.published.post(author=self.owner)
+        post = get_object_or_404(Post, id=self.kwargs['post_id'])
+        owner = post.author == self.request.user
+        return Post.published.post(author=owner)
 
     def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['form'] = CommentForm()
-        context['comments'] = Comment.published.for_post(
-            self.kwargs['post_id'])
+        context = dict(
+            **super().get_context_data(**kwargs),
+            form=CommentForm(),
+            comments=Comment.published.for_post(
+                self.kwargs['post_id'])
+        )
         return context
 
 

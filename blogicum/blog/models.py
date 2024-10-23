@@ -13,10 +13,8 @@ from django.urls import reverse
 
 from blogicum.models import BaseBlogModel
 
-from .menegers import CommentMeneger, PostManager
-
-# Константа длины выводимого заголовка
-LEN_TITLE = 50
+from .managers import CommentManager, PostManager
+from .constants import LEN_TITLE, MAX_LINE_LENGHT
 
 User = get_user_model()  # Модель пользователя
 
@@ -25,7 +23,7 @@ class Category(BaseBlogModel):
     """Модель категорий"""
 
     title = models.CharField(
-        max_length=256,
+        max_length=MAX_LINE_LENGHT,
         verbose_name='Заголовок',
     )
     description = models.TextField(
@@ -51,7 +49,7 @@ class Location(BaseBlogModel):
     """Модель местоположений"""
 
     name = models.CharField(
-        max_length=256,
+        max_length=MAX_LINE_LENGHT,
         verbose_name='Название места',
     )
 
@@ -68,7 +66,7 @@ class Post(BaseBlogModel):
     """модель публикаций"""
 
     title = models.CharField(
-        max_length=256,
+        max_length=MAX_LINE_LENGHT,
         verbose_name='Заголовок',
     )
     text = models.TextField(
@@ -96,7 +94,6 @@ class Post(BaseBlogModel):
         null=True,
         on_delete=models.SET_NULL,
         verbose_name='Категория',
-        related_name='posts'
     )
     image = models.ImageField('Фото', upload_to='post_images', blank=True)
 
@@ -105,6 +102,7 @@ class Post(BaseBlogModel):
     published = PostManager()
 
     class Meta:
+        default_related_name = 'posts'
         verbose_name = 'публикация'
         verbose_name_plural = 'Публикации'
         ordering = ('-pub_date',)
@@ -127,15 +125,15 @@ class Comment(models.Model):
         on_delete=models.CASCADE)
     post = models.ForeignKey(
         Post,
-        on_delete=models.CASCADE,
-        related_name='comments')
+        on_delete=models.CASCADE)
     created_at = models.DateTimeField(verbose_name='Дата создания',
                                       auto_now_add=True)
     # Менеджеры
     objects = models.Manager()
-    published = CommentMeneger()
+    published = CommentManager()
 
     class Meta:
+        default_related_name = 'comments'
         verbose_name = 'комментарий'
         verbose_name_plural = 'Комментарии'
         ordering = ('created_at',)

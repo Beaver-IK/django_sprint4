@@ -1,7 +1,7 @@
-from blog.models import Comment, Post
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.shortcuts import get_object_or_404
 
+from blog.models import Comment, Post
 from .forms import CommentForm
 
 

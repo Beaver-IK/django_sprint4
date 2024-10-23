@@ -6,15 +6,18 @@
 Местоположений(LocationAdmin)
 """
 from django.contrib import admin
+from django.contrib.auth.models import Group
+from .models import Category, Location, Post, Comment
 
-from .models import Category, Location, Post
 
 admin.site.empty_value_display = 'Не задано'
+
+admin.site.unregister(Group)
 
 
 @admin.register(Post)  # декоратор для регистрации модели в админке
 class PostAdmin(admin.ModelAdmin):
-    """Модель для администрирования модели Post"""
+    """Модель для администрирования модели Post."""
 
     list_display = (
         'title',
@@ -36,7 +39,7 @@ class PostAdmin(admin.ModelAdmin):
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
-    """Модель для администрирования модели Category"""
+    """Модель для администрирования модели Category."""
 
     list_display = (  # Отображаемые поля
         'title',
@@ -52,6 +55,9 @@ class CategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Location)
 class LocationAdmin(admin.ModelAdmin):
-    """Модель для администрирования модели Location"""
+    """Модель для администрирования модели Location."""
 
-    pass
+
+@admin.register(Comment)
+class CommentAdmin(admin.ModelAdmin):
+    """Модель для администрирования модели Comment."""
