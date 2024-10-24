@@ -24,13 +24,6 @@ class PostForm(forms.ModelForm):
     class Meta:
         model = Post
         exclude = ('author',)
-    # Забракованная автотестами фича
-    """def clean_pub_date(self):
-        if self.cleaned_data['pub_date'] is None:
-            return now()
-        elif self.cleaned_data['pub_date'] < now():
-            raise ValidationError('Нельзя публиковать посты из прошлого')
-        return self.cleaned_data['pub_date']"""
 
 
 class UserForm(forms.ModelForm):

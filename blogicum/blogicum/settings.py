@@ -13,7 +13,10 @@ SECRET_KEY = 'django-insecure-3d)wl=il9orkp)7c+9cn*cegea_ii3sa_a+(j(j+tl)k)-d8&w
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = [
+    'www.Vannchek.pythonanywhere.com',
+    'Vannchek.pythonanywhere.com',
+]
 
 LOGIN_REDIRECT_URL = 'blog:index'
 

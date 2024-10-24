@@ -32,7 +32,7 @@ class CategoryListView(ListView):
             Category, slug=self.kwargs['category_slug'],
             is_published=True)
         return Post.published.dropout(
-            category=category.slug)
+            slug=category.slug)
 
 
 class ProfileListView(ListView):
@@ -41,17 +41,20 @@ class ProfileListView(ListView):
     model = Post
     template_name = 'blog/profile.html'
     paginate_by = PAGINATE_BY
+    profile = None
+
+    def dispatch(self, request, *args, **kwargs):
+        self.profile = get_object_or_404(User, username=kwargs['username'])
+        return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
-        owner = get_object_or_404(User, username=self.kwargs['username'])
-        is_owner = self.request.user == owner
+        is_owner = self.request.user == self.profile
         return Post.published.in_profile(
-            author=self.kwargs['username'], auth=is_owner)
+            username=self.kwargs['username'], auth=is_owner)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['profile'] = get_object_or_404(
-            User, username=self.kwargs['username'])
+        context['profile'] = self.profile
         return context
 
 
@@ -96,7 +99,7 @@ class PostDetailDetailView(LoginRequiredMixin, DetailView):
     def get_queryset(self):
         post = get_object_or_404(Post, id=self.kwargs['post_id'])
         owner = post.author == self.request.user
-        return Post.published.post(author=owner)
+        return Post.published.post(owner=owner)
 
     def get_context_data(self, **kwargs):
         context = dict(
